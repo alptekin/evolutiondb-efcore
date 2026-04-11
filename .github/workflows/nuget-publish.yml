@@ -21,13 +21,13 @@ jobs:
           dotnet-version: "8.0.x"
 
       - name: Restore
-        run: dotnet restore ${{ env.PACKAGE_PROJECT }}
+        run: dotnet restore
 
       - name: Build
-        run: dotnet build ${{ env.PACKAGE_PROJECT }} -c Release --no-restore
+        run: dotnet build -c Release --no-restore
 
       - name: Test
-        run: dotnet test --no-build -c Release
+        run: dotnet test -c Release --no-build --verbosity normal
 
       - name: Pack
         run: dotnet pack ${{ env.PACKAGE_PROJECT }} -c Release --no-build -o ./nupkg
