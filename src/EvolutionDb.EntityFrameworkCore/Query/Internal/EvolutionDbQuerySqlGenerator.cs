@@ -3,18 +3,19 @@ using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using Microsoft.EntityFrameworkCore.Storage;
 
-namespace EvoSQL.EntityFrameworkCore.Query.Internal;
+namespace EvolutionDb.EntityFrameworkCore.Query.Internal;
 
-public class EvoSqlQuerySqlGenerator : QuerySqlGenerator
+public class EvolutionDbQuerySqlGenerator : QuerySqlGenerator
 {
-    public EvoSqlQuerySqlGenerator(QuerySqlGeneratorDependencies dependencies)
+    public EvolutionDbQuerySqlGenerator(QuerySqlGeneratorDependencies dependencies)
         : base(dependencies)
     {
+        //...
     }
 
     protected override Expression VisitSelect(SelectExpression selectExpression)
     {
-        // EvoSQL supports LIMIT/OFFSET natively (PostgreSQL style)
+        // EvolutionDB supports LIMIT/OFFSET natively (PostgreSQL style)
         return base.VisitSelect(selectExpression);
     }
 

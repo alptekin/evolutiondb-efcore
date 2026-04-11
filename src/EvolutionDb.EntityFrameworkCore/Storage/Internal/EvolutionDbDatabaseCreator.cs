@@ -1,17 +1,14 @@
 using System.Data.Common;
 using Microsoft.EntityFrameworkCore.Storage;
 
-namespace EvoSQL.EntityFrameworkCore.Storage.Internal;
+namespace EvolutionDb.EntityFrameworkCore.Storage.Internal;
 
-public class EvoSqlDatabaseCreator : RelationalDatabaseCreator
+public class EvolutionDbDatabaseCreator : RelationalDatabaseCreator
 {
     private readonly IRelationalConnection _connection;
     private readonly IRawSqlCommandBuilder _rawSqlCommandBuilder;
 
-    public EvoSqlDatabaseCreator(
-        RelationalDatabaseCreatorDependencies dependencies,
-        IRelationalConnection connection,
-        IRawSqlCommandBuilder rawSqlCommandBuilder)
+    public EvolutionDbDatabaseCreator(RelationalDatabaseCreatorDependencies dependencies, IRelationalConnection connection, IRawSqlCommandBuilder rawSqlCommandBuilder)
         : base(dependencies)
     {
         _connection = connection;
@@ -34,24 +31,29 @@ public class EvoSqlDatabaseCreator : RelationalDatabaseCreator
 
     public override bool HasTables()
     {
-        var command = _rawSqlCommandBuilder.Build(
-            "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema NOT IN ('pg_catalog', 'information_schema')");
+        var command = _rawSqlCommandBuilder.Build("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema NOT IN ('pg_catalog', 'information_schema')");
 
-        var result = command.ExecuteScalar(
-            new RelationalCommandParameterObject(_connection, null, null, null, null));
+        var result = command.ExecuteScalar(new RelationalCommandParameterObject(_connection, null, null, null, null));
 
         return result != null && Convert.ToInt32(result) > 0;
     }
 
     public override void Create()
     {
-        // EvoSQL creates databases via SQL
+        // EvolutionDB creates databases via SQL
         using var conn = _connection.DbConnection;
         conn.Open();
         using var cmd = conn.CreateCommand();
         var dbName = conn.Database;
         cmd.CommandText = $"CREATE DATABASE {dbName}";
-        try { cmd.ExecuteNonQuery(); } catch { /* may already exist */ }
+        try
+        {
+            cmd.ExecuteNonQuery();
+        }
+        catch
+        {
+            throw new Exception("Database already exists!");
+        }
         conn.Close();
     }
 

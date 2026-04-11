@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using EvoSQL.EntityFrameworkCore.Extensions;
+using EvolutionDb.EntityFrameworkCore.Extensions;
 
 // --- Main ---
-Console.WriteLine("EvoSQL EF Core Provider - Sample");
-Console.WriteLine("================================");
+Console.WriteLine("EvolutionDB EF Core Provider - Sample");
+Console.WriteLine("=====================================");
 Console.WriteLine();
 
 using var context = new AppDbContext();
@@ -47,7 +47,7 @@ public class AppDbContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseEvoSql(
+        optionsBuilder.UseEvolutionDb(
             "Host=localhost;Port=5433;Username=admin;Password=admin;Database=testdb");
     }
 

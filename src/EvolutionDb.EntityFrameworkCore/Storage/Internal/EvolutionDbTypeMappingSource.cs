@@ -1,9 +1,9 @@
 using System.Data;
 using Microsoft.EntityFrameworkCore.Storage;
 
-namespace EvoSQL.EntityFrameworkCore.Storage.Internal;
+namespace EvolutionDb.EntityFrameworkCore.Storage.Internal;
 
-public class EvoSqlTypeMappingSource : RelationalTypeMappingSource
+public class EvolutionDbTypeMappingSource : RelationalTypeMappingSource
 {
     private static readonly BoolTypeMapping Bool = new("BOOLEAN", DbType.Boolean);
     private static readonly ShortTypeMapping SmallInt = new("SMALLINT", DbType.Int16);
@@ -62,11 +62,10 @@ public class EvoSqlTypeMappingSource : RelationalTypeMappingSource
         { "uuid", Uuid },
     };
 
-    public EvoSqlTypeMappingSource(
-        TypeMappingSourceDependencies dependencies,
-        RelationalTypeMappingSourceDependencies relationalDependencies)
+    public EvolutionDbTypeMappingSource(TypeMappingSourceDependencies dependencies, RelationalTypeMappingSourceDependencies relationalDependencies)
         : base(dependencies, relationalDependencies)
     {
+        //...
     }
 
     protected override RelationalTypeMapping? FindMapping(in RelationalTypeMappingInfo mappingInfo)
@@ -80,10 +79,11 @@ public class EvoSqlTypeMappingSource : RelationalTypeMappingSource
             var baseName = storeTypeName;
             var parenIdx = storeTypeName.IndexOf('(');
             if (parenIdx > 0)
+            {
                 baseName = storeTypeName[..parenIdx].Trim();
+            }
 
-            if (baseName.Equals("varchar", StringComparison.OrdinalIgnoreCase)
-                || baseName.Equals("character varying", StringComparison.OrdinalIgnoreCase))
+            if (baseName.Equals("varchar", StringComparison.OrdinalIgnoreCase) || baseName.Equals("character varying", StringComparison.OrdinalIgnoreCase))
             {
                 return new StringTypeMapping(storeTypeName, DbType.String, size: mappingInfo.Size ?? 255);
             }
@@ -106,8 +106,7 @@ public class EvoSqlTypeMappingSource : RelationalTypeMappingSource
                 // Handle string with MaxLength
                 if (clrType == typeof(string) && mappingInfo.Size is > 0)
                 {
-                    return new StringTypeMapping(
-                        $"VARCHAR({mappingInfo.Size})", DbType.String, size: mappingInfo.Size);
+                    return new StringTypeMapping($"VARCHAR({mappingInfo.Size})", DbType.String, size: mappingInfo.Size);
                 }
 
                 return clrMapping;
@@ -115,7 +114,9 @@ public class EvoSqlTypeMappingSource : RelationalTypeMappingSource
 
             // byte[] → TEXT (base64) — no native binary type
             if (clrType == typeof(byte[]))
+            {
                 return Text;
+            }
         }
 
         return base.FindMapping(mappingInfo);

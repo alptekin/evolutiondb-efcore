@@ -2,13 +2,14 @@ using System.Data.Common;
 using Microsoft.EntityFrameworkCore.Storage;
 using Npgsql;
 
-namespace EvoSQL.EntityFrameworkCore.Storage.Internal;
+namespace EvolutionDb.EntityFrameworkCore.Storage.Internal;
 
-public class EvoSqlRelationalConnection : RelationalConnection
+public class EvolutionDbRelationalConnection : RelationalConnection
 {
-    public EvoSqlRelationalConnection(RelationalConnectionDependencies dependencies)
+    public EvolutionDbRelationalConnection(RelationalConnectionDependencies dependencies)
         : base(dependencies)
     {
+        //...
     }
 
     protected override DbConnection CreateDbConnection()
@@ -16,7 +17,7 @@ public class EvoSqlRelationalConnection : RelationalConnection
         var connStr = ConnectionString ?? "";
         var builder = new NpgsqlConnectionStringBuilder(connStr);
 
-        // Default to EvoSQL port
+        // Default to EvolutionDB port
         if (!connStr.Contains("Port=", StringComparison.OrdinalIgnoreCase))
             builder.Port = 5433;
 

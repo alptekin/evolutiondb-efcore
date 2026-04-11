@@ -1,29 +1,23 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using EvoSQL.EntityFrameworkCore.Infrastructure;
+using EvolutionDb.EntityFrameworkCore.Infrastructure;
 
-namespace EvoSQL.EntityFrameworkCore.Extensions;
+namespace EvolutionDb.EntityFrameworkCore.Extensions;
 
-public static class EvoSqlDbContextOptionsBuilderExtensions
+public static class EvolutionDbDbContextOptionsBuilderExtensions
 {
-    public static DbContextOptionsBuilder UseEvoSql(
-        this DbContextOptionsBuilder optionsBuilder,
-        string connectionString,
-        Action<EvoSqlDbContextOptionsBuilder>? evoSqlOptionsAction = null)
+    public static DbContextOptionsBuilder UseEvolutionDb(this DbContextOptionsBuilder optionsBuilder, string connectionString, Action<EvolutionDbDbContextOptionsBuilder>? evolutionDbOptionsAction = null)
     {
-        var extension = (EvoSqlOptionsExtension)GetOrCreateExtension(optionsBuilder)
-            .WithConnectionString(NormalizeConnectionString(connectionString));
+        var extension = (EvolutionDbOptionsExtension)GetOrCreateExtension(optionsBuilder).WithConnectionString(NormalizeConnectionString(connectionString));
 
         ((IDbContextOptionsBuilderInfrastructure)optionsBuilder).AddOrUpdateExtension(extension);
 
-        evoSqlOptionsAction?.Invoke(new EvoSqlDbContextOptionsBuilder(optionsBuilder));
+        evolutionDbOptionsAction?.Invoke(new EvolutionDbDbContextOptionsBuilder(optionsBuilder));
 
         return optionsBuilder;
     }
 
-    private static EvoSqlOptionsExtension GetOrCreateExtension(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.Options.FindExtension<EvoSqlOptionsExtension>()
-           ?? new EvoSqlOptionsExtension();
+    private static EvolutionDbOptionsExtension GetOrCreateExtension(DbContextOptionsBuilder optionsBuilder) => optionsBuilder.Options.FindExtension<EvolutionDbOptionsExtension>() ?? new EvolutionDbOptionsExtension();
 
     private static string NormalizeConnectionString(string connectionString)
     {
@@ -43,11 +37,11 @@ public static class EvoSqlDbContextOptionsBuilderExtensions
     }
 }
 
-public class EvoSqlDbContextOptionsBuilder
+public class EvolutionDbDbContextOptionsBuilder
 {
     private readonly DbContextOptionsBuilder _optionsBuilder;
 
-    public EvoSqlDbContextOptionsBuilder(DbContextOptionsBuilder optionsBuilder)
+    public EvolutionDbDbContextOptionsBuilder(DbContextOptionsBuilder optionsBuilder)
     {
         _optionsBuilder = optionsBuilder;
     }

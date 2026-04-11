@@ -2,26 +2,20 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Migrations.Operations;
 
-namespace EvoSQL.EntityFrameworkCore.Migrations.Internal;
+namespace EvolutionDb.EntityFrameworkCore.Migrations.Internal;
 
-public class EvoSqlMigrationsSqlGenerator : MigrationsSqlGenerator
+public class EvolutionDbMigrationsSqlGenerator : MigrationsSqlGenerator
 {
-    public EvoSqlMigrationsSqlGenerator(
-        MigrationsSqlGeneratorDependencies dependencies,
-        IRelationalAnnotationProvider migrationsAnnotations)
+    public EvolutionDbMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dependencies, IRelationalAnnotationProvider migrationsAnnotations)
         : base(dependencies)
     {
+        //...
     }
 
-    protected override void Generate(
-        CreateTableOperation operation,
-        IModel? model,
-        MigrationCommandListBuilder builder,
-        bool terminate = true)
+    protected override void Generate(CreateTableOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
     {
         builder.Append("CREATE TABLE ");
-        builder.Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(
-            operation.Name, operation.Schema));
+        builder.Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Name, operation.Schema));
         builder.AppendLine(" (");
 
         using (builder.Indent())
@@ -29,14 +23,20 @@ public class EvoSqlMigrationsSqlGenerator : MigrationsSqlGenerator
             for (var i = 0; i < operation.Columns.Count; i++)
             {
                 var column = operation.Columns[i];
-                if (i > 0) builder.AppendLine(",");
+
+                if (i > 0) 
+                {
+                    builder.AppendLine(",");
+                }
 
                 builder.Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(column.Name));
                 builder.Append(" ");
                 builder.Append(column.ColumnType ?? GetColumnType(column));
 
                 if (!column.IsNullable)
+                {
                     builder.Append(" NOT NULL");
+                }
 
                 if (column.DefaultValueSql != null)
                 {
@@ -60,9 +60,7 @@ public class EvoSqlMigrationsSqlGenerator : MigrationsSqlGenerator
             {
                 builder.AppendLine(",");
                 builder.Append("PRIMARY KEY (");
-                builder.Append(string.Join(", ",
-                    operation.PrimaryKey.Columns.Select(c =>
-                        Dependencies.SqlGenerationHelper.DelimitIdentifier(c))));
+                builder.Append(string.Join(", ", operation.PrimaryKey.Columns.Select(c => Dependencies.SqlGenerationHelper.DelimitIdentifier(c))));
                 builder.Append(")");
             }
 
@@ -70,15 +68,11 @@ public class EvoSqlMigrationsSqlGenerator : MigrationsSqlGenerator
             {
                 builder.AppendLine(",");
                 builder.Append("FOREIGN KEY (");
-                builder.Append(string.Join(", ",
-                    fk.Columns.Select(c => Dependencies.SqlGenerationHelper.DelimitIdentifier(c))));
+                builder.Append(string.Join(", ",fk.Columns.Select(c => Dependencies.SqlGenerationHelper.DelimitIdentifier(c))));
                 builder.Append(") REFERENCES ");
-                builder.Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(
-                    fk.PrincipalTable, fk.PrincipalSchema));
+                builder.Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(fk.PrincipalTable, fk.PrincipalSchema));
                 builder.Append(" (");
-                builder.Append(string.Join(", ",
-                    (fk.PrincipalColumns ?? Array.Empty<string>()).Select(c =>
-                        Dependencies.SqlGenerationHelper.DelimitIdentifier(c))));
+                builder.Append(string.Join(", ", (fk.PrincipalColumns ?? Array.Empty<string>()).Select(c => Dependencies.SqlGenerationHelper.DelimitIdentifier(c))));
                 builder.Append(")");
 
                 if (fk.OnDelete != ReferentialAction.NoAction)
@@ -92,9 +86,7 @@ public class EvoSqlMigrationsSqlGenerator : MigrationsSqlGenerator
             {
                 builder.AppendLine(",");
                 builder.Append("UNIQUE (");
-                builder.Append(string.Join(", ",
-                    unique.Columns.Select(c =>
-                        Dependencies.SqlGenerationHelper.DelimitIdentifier(c))));
+                builder.Append(string.Join(", ", unique.Columns.Select(c => Dependencies.SqlGenerationHelper.DelimitIdentifier(c))));
                 builder.Append(")");
             }
 
@@ -119,15 +111,10 @@ public class EvoSqlMigrationsSqlGenerator : MigrationsSqlGenerator
         }
     }
 
-    protected override void Generate(
-        DropTableOperation operation,
-        IModel? model,
-        MigrationCommandListBuilder builder,
-        bool terminate = true)
+    protected override void Generate(DropTableOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
     {
         builder.Append("DROP TABLE IF EXISTS ");
-        builder.Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(
-            operation.Name, operation.Schema));
+        builder.Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Name, operation.Schema));
 
         if (terminate)
         {
@@ -136,22 +123,19 @@ public class EvoSqlMigrationsSqlGenerator : MigrationsSqlGenerator
         }
     }
 
-    protected override void Generate(
-        AddColumnOperation operation,
-        IModel? model,
-        MigrationCommandListBuilder builder,
-        bool terminate = true)
+    protected override void Generate(AddColumnOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
     {
         builder.Append("ALTER TABLE ");
-        builder.Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(
-            operation.Table, operation.Schema));
+        builder.Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Table, operation.Schema));
         builder.Append(" ADD COLUMN ");
         builder.Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Name));
         builder.Append(" ");
         builder.Append(operation.ColumnType ?? GetColumnType(operation));
 
         if (!operation.IsNullable)
+        {
             builder.Append(" NOT NULL");
+        }
 
         if (operation.DefaultValueSql != null)
         {
@@ -171,15 +155,10 @@ public class EvoSqlMigrationsSqlGenerator : MigrationsSqlGenerator
         }
     }
 
-    protected override void Generate(
-        DropColumnOperation operation,
-        IModel? model,
-        MigrationCommandListBuilder builder,
-        bool terminate = true)
+    protected override void Generate(DropColumnOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
     {
         builder.Append("ALTER TABLE ");
-        builder.Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(
-            operation.Table, operation.Schema));
+        builder.Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Table, operation.Schema));
         builder.Append(" DROP COLUMN ");
         builder.Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Name));
 
@@ -190,14 +169,10 @@ public class EvoSqlMigrationsSqlGenerator : MigrationsSqlGenerator
         }
     }
 
-    protected override void Generate(
-        RenameColumnOperation operation,
-        IModel? model,
-        MigrationCommandListBuilder builder)
+    protected override void Generate(RenameColumnOperation operation, IModel? model, MigrationCommandListBuilder builder)
     {
         builder.Append("ALTER TABLE ");
-        builder.Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(
-            operation.Table, operation.Schema));
+        builder.Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Table, operation.Schema));
         builder.Append(" RENAME COLUMN ");
         builder.Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Name));
         builder.Append(" TO ");
@@ -206,23 +181,16 @@ public class EvoSqlMigrationsSqlGenerator : MigrationsSqlGenerator
         builder.EndCommand();
     }
 
-    protected override void Generate(
-        CreateIndexOperation operation,
-        IModel? model,
-        MigrationCommandListBuilder builder,
-        bool terminate = true)
+    protected override void Generate(CreateIndexOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
     {
         builder.Append("CREATE ");
         if (operation.IsUnique) builder.Append("UNIQUE ");
         builder.Append("INDEX ");
         builder.Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Name));
         builder.Append(" ON ");
-        builder.Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(
-            operation.Table, operation.Schema));
+        builder.Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Table, operation.Schema));
         builder.Append(" (");
-        builder.Append(string.Join(", ",
-            operation.Columns.Select(c =>
-                Dependencies.SqlGenerationHelper.DelimitIdentifier(c))));
+        builder.Append(string.Join(", ", operation.Columns.Select(c => Dependencies.SqlGenerationHelper.DelimitIdentifier(c))));
         builder.Append(")");
 
         if (terminate)
@@ -232,11 +200,7 @@ public class EvoSqlMigrationsSqlGenerator : MigrationsSqlGenerator
         }
     }
 
-    protected override void Generate(
-        DropIndexOperation operation,
-        IModel? model,
-        MigrationCommandListBuilder builder,
-        bool terminate = true)
+    protected override void Generate(DropIndexOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
     {
         builder.Append("DROP INDEX ");
         builder.Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Name));
