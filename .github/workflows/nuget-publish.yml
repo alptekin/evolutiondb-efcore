@@ -1,0 +1,36 @@
+name: NuGet Publish
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  PACKAGE_PROJECT: src/EvolutionDb.EntityFrameworkCore/EvolutionDb.EntityFrameworkCore.csproj
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        run: dotnet restore ${{ env.PACKAGE_PROJECT }}
+
+      - name: Build
+        run: dotnet build ${{ env.PACKAGE_PROJECT }} -c Release --no-restore
+
+      - name: Test
+        run: dotnet test --no-build -c Release
+
+      - name: Pack
+        run: dotnet pack ${{ env.PACKAGE_PROJECT }} -c Release --no-build -o ./nupkg
+
+      - name: Push to NuGet
+        run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
