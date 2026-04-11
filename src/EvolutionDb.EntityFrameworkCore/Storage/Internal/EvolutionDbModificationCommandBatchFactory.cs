@@ -6,14 +6,18 @@ namespace EvolutionDb.EntityFrameworkCore.Storage.Internal;
 
 public class EvolutionDbModificationCommandBatchFactory : IModificationCommandBatchFactory
 {
+    private const int DefaultMaxBatchSize = 100;
+
     private readonly ModificationCommandBatchFactoryDependencies _dependencies;
-    private readonly IDbContextOptions _options;
+    private readonly int _maxBatchSize;
 
     public EvolutionDbModificationCommandBatchFactory(ModificationCommandBatchFactoryDependencies dependencies, IDbContextOptions options)
     {
         _dependencies = dependencies;
-        _options = options;
+
+        var relationalOptions = RelationalOptionsExtension.Extract(options);
+        _maxBatchSize = relationalOptions.MaxBatchSize ?? DefaultMaxBatchSize;
     }
 
-    public ModificationCommandBatch Create() => new SingularModificationCommandBatch(_dependencies);
+    public ModificationCommandBatch Create() => new EvolutionDbModificationCommandBatch(_dependencies, _maxBatchSize);
 }
