@@ -21,6 +21,8 @@ public static class EvolutionDbServiceCollectionExtensions
             .TryAdd<IRelationalTypeMappingSource, EvolutionDbTypeMappingSource>()
             .TryAdd<IRelationalConnection, EvolutionDbRelationalConnection>()
             .TryAdd<IQuerySqlGeneratorFactory, EvolutionDbQuerySqlGeneratorFactory>()
+            .TryAdd<IMethodCallTranslatorProvider, EvolutionDbMethodCallTranslatorProvider>()
+            .TryAdd<IMemberTranslatorProvider, EvolutionDbMemberTranslatorProvider>()
             .TryAdd<IMigrationsSqlGenerator, EvolutionDbMigrationsSqlGenerator>()
             .TryAdd<IHistoryRepository, EvolutionDbHistoryRepository>()
             .TryAdd<IRelationalDatabaseCreator, EvolutionDbDatabaseCreator>()
