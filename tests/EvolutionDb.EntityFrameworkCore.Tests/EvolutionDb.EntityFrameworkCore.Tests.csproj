@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\EvolutionDb.EntityFrameworkCore\EvolutionDb.EntityFrameworkCore.csproj" />
+    <ProjectReference Include="..\..\src\evosql\evosql.csproj" />
   </ItemGroup>
 
 </Project>

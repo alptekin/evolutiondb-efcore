@@ -52,22 +52,61 @@ public class EvoProtocolClient : IDisposable
             next = ReadLine();
         }
 
-        if (next != "AUTH_REQUIRED")
-            throw new EvosqlException("Expected AUTH_REQUIRED, got: " + (next ?? "null"), "08000");
+        if (next == "AUTH_SCRAM")
+        {
+            AuthenticateScram(username, password);
+            return;
+        }
 
-        // Send credentials
+        if (next != "AUTH_REQUIRED")
+            throw new EvosqlException("Expected AUTH_REQUIRED or AUTH_SCRAM, got: " + (next ?? "null"), "08000");
+
+        // Cleartext auth (backward compatibility)
         SendLine($"AUTH {username} {password}");
         var authResult = ReadLine();
 
         if (authResult == "AUTH_OK") return;
 
-        if (authResult != null && authResult.StartsWith("ERR "))
+        ThrowAuthError(authResult);
+    }
+
+    private void AuthenticateScram(string username, string password)
+    {
+        var scram = new ScramClient();
+
+        // Step 1: Send client-first-message
+        var clientFirst = scram.CreateClientFirst(username);
+        SendLine($"SCRAM-CLIENT-FIRST {clientFirst}");
+
+        // Step 2: Receive server-first-message
+        var serverFirstLine = ReadLine();
+        if (serverFirstLine == null || !serverFirstLine.StartsWith("SCRAM-SERVER-FIRST "))
+            ThrowAuthError(serverFirstLine);
+        var serverFirst = serverFirstLine!["SCRAM-SERVER-FIRST ".Length..];
+
+        // Step 3: Send client-final-message
+        var clientFinal = scram.CreateClientFinal(serverFirst, password);
+        SendLine($"SCRAM-CLIENT-FINAL {clientFinal}");
+
+        // Step 4: Receive server-final-message
+        var serverFinalLine = ReadLine();
+        if (serverFinalLine == null || !serverFinalLine.StartsWith("SCRAM-SERVER-FINAL "))
+            ThrowAuthError(serverFinalLine);
+        var serverFinal = serverFinalLine!["SCRAM-SERVER-FINAL ".Length..];
+
+        if (!scram.ValidateServerFinal(serverFinal))
+            throw new EvosqlException("SCRAM: server signature verification failed", "28000");
+    }
+
+    private static void ThrowAuthError(string? response)
+    {
+        if (response != null && response.StartsWith("ERR "))
         {
-            var parts = authResult[4..].Split(' ', 2);
+            var parts = response[4..].Split(' ', 2);
             throw new EvosqlException(parts.Length > 1 ? parts[1] : "Authentication failed", parts[0]);
         }
 
-        throw new EvosqlException("Authentication failed: " + (authResult ?? "null"), "28P01");
+        throw new EvosqlException("Authentication failed: " + (response ?? "null"), "28P01");
     }
 
     public EvoQueryResult ExecuteQuery(string sql)
@@ -111,6 +150,62 @@ public class EvoProtocolClient : IDisposable
         return result;
     }
 
+    public EvoQueryResult PrepareStatement(string name, string sql)
+    {
+        var sqlBytes = Encoding.UTF8.GetBytes(sql);
+        SendLine($"PREPARE {name} {sqlBytes.Length}");
+        SendLine(sql);
+
+        return ReadCommandResponse();
+    }
+
+    public EvoQueryResult ExecutePrepared(string name, string?[] parameters)
+    {
+        SendLine($"EXECUTE {name} {parameters.Length}");
+        foreach (var p in parameters)
+            SendLine(p is null ? "\\N" : p);
+
+        var result = new EvoQueryResult();
+
+        while (true)
+        {
+            var line = ReadLine();
+            if (line == null) throw new EvosqlException("Connection closed unexpectedly", "08006");
+
+            if (line == "READY") break;
+
+            if (line == "RESULT")
+            {
+                result.IsSelect = true;
+                ReadResultSet(result);
+            }
+            else if (line == "OK")
+            {
+                result.IsSelect = false;
+            }
+            else if (line.StartsWith("TAG "))
+            {
+                result.CommandTag = line[4..];
+                result.RecordsAffected = ParseRecordsAffected(result.CommandTag);
+            }
+            else if (line.StartsWith("ERR "))
+            {
+                result.HasError = true;
+                var parts = line[4..].Split(' ', 2);
+                result.ErrorSqlState = parts[0];
+                result.ErrorMessage = parts.Length > 1 ? parts[1] : "Unknown error";
+            }
+        }
+
+        return result;
+    }
+
+    public EvoQueryResult DeallocateStatement(string name)
+    {
+        SendLine($"DEALLOCATE {name}");
+        return ReadCommandResponse();
+    }
+
     public void SendQuit()
     {
         try { SendLine("QUIT"); } catch { }
@@ -124,6 +219,38 @@ public class EvoProtocolClient : IDisposable
         _writer?.Dispose();
         _reader?.Dispose();
         _tcp?.Dispose();
+    }
+
+    private EvoQueryResult ReadCommandResponse()
+    {
+        var result = new EvoQueryResult();
+
+        while (true)
+        {
+            var line = ReadLine();
+            if (line == null) throw new EvosqlException("Connection closed unexpectedly", "08006");
+
+            if (line == "READY") break;
+
+            if (line == "OK")
+            {
+                result.IsSelect = false;
+            }
+            else if (line.StartsWith("TAG "))
+            {
+                result.CommandTag = line[4..];
+                result.RecordsAffected = ParseRecordsAffected(result.CommandTag);
+            }
+            else if (line.StartsWith("ERR "))
+            {
+                result.HasError = true;
+                var parts = line[4..].Split(' ', 2);
+                result.ErrorSqlState = parts[0];
+                result.ErrorMessage = parts.Length > 1 ? parts[1] : "Unknown error";
+            }
+        }
+
+        return result;
     }
 
     private void ReadResultSet(EvoQueryResult result)
