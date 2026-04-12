@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage;
 using EvolutionDb.EntityFrameworkCore.Extensions;
 using EvolutionDb.EntityFrameworkCore.Storage.Internal;
@@ -96,6 +97,91 @@ public class EvolutionDbFunctionsTests
 
     [Fact]
     public void NewUuid_ThrowsOnClientSide() => Assert.Throws<InvalidOperationException>(() => EvolutionDbFunctions.NewUuid());
+}
+
+public class RelationalModelTests
+{
+    [Fact]
+    public void Model_HasTableColumnMappings()
+    {
+        // Verify that the relational model is built correctly with table-column mappings.
+        // This is the root cause of the "Sequence contains no matching element" error
+        // in ConcreteColumnExpression when mappings are missing.
+        var options = new DbContextOptionsBuilder()
+            .UseEvolutionDb("Host=localhost;Database=test")
+            .Options;
+
+        using var ctx = new TestModelContext(options);
+        var model = ctx.Model;
+        var relationalModel = model.GetRelationalModel();
+
+        // Verify the relational model has tables
+        var tables = relationalModel.Tables.ToList();
+        Assert.NotEmpty(tables);
+
+        // Verify each table has columns mapped from entity properties
+        var productTable = tables.First(t => t.Name == "efcore_products");
+        Assert.NotNull(productTable);
+
+        var columns = productTable.Columns.ToList();
+        Assert.True(columns.Count >= 3, $"Expected at least 3 columns, got {columns.Count}");
+
+        // Verify each column has property mappings (this is what ConcreteColumnExpression needs)
+        foreach (var column in columns)
+        {
+            Assert.NotEmpty(column.PropertyMappings);
+        }
+
+        // Verify specific columns exist
+        Assert.Contains(columns, c => c.Name == "Id");
+        Assert.Contains(columns, c => c.Name == "Name");
+        Assert.Contains(columns, c => c.Name == "Price");
+    }
+
+    [Fact]
+    public void Model_PropertyHasTableColumnMappings()
+    {
+        // Verify that IProperty.GetTableColumnMappings() returns non-empty results.
+        // This is the exact method ConcreteColumnExpression calls.
+        var options = new DbContextOptionsBuilder()
+            .UseEvolutionDb("Host=localhost;Database=test")
+            .Options;
+
+        using var ctx = new TestModelContext(options);
+        var entityType = ctx.Model.FindEntityType(typeof(TestProduct))!;
+        Assert.NotNull(entityType);
+
+        foreach (var property in entityType.GetProperties())
+        {
+            var mappings = property.GetTableColumnMappings().ToList();
+            Assert.NotEmpty(mappings);
+        }
+    }
+
+    private class TestProduct
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+        public decimal Price { get; set; }
+    }
+
+    private class TestModelContext : DbContext
+    {
+        public TestModelContext(DbContextOptions options) : base(options) { }
+        public DbSet<TestProduct> Products => Set<TestProduct>();
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<TestProduct>(entity =>
+            {
+                entity.ToTable("efcore_products");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).ValueGeneratedOnAdd();
+                entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
+                entity.Property(e => e.Price).HasColumnType("DECIMAL(10,2)");
+            });
+        }
+    }
 }
 
 public class MigrationsSqlGeneratorTests

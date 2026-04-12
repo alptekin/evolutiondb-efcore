@@ -17,13 +17,10 @@ public class EvolutionDbRelationalConnection : RelationalConnection
         var connStr = ConnectionString ?? "";
         var builder = new NpgsqlConnectionStringBuilder(connStr);
 
-        // Default to EvolutionDB port
         if (!connStr.Contains("Port=", StringComparison.OrdinalIgnoreCase))
             builder.Port = 5433;
 
-        // Skip Npgsql's type-loading queries (they use subqueries against pg_type)
-        builder.ServerCompatibilityMode = ServerCompatibilityMode.NoTypeLoading;
-
-        return new NpgsqlConnection(builder.ConnectionString);
+        var npgsqlConn = new NpgsqlConnection(builder.ConnectionString);
+        return new EvolutionDbConnectionWrapper(npgsqlConn);
     }
 }
