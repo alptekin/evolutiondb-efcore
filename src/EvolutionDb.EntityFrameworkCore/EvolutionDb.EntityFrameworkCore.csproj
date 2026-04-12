@@ -10,7 +10,7 @@
     <Version>8.0.0</Version>
     <Authors>alptekin</Authors>
     <Company>EvolutionDB</Company>
-    <Description>Entity Framework Core provider for EvolutionDB. Full LINQ support, migrations, scaffolding, batch DML with RETURNING, and built-in functions (snowflake_id, gen_random_uuid_v7). Connects via PostgreSQL wire protocol on port 5433.</Description>
+    <Description>Entity Framework Core provider for EvolutionDB. Full LINQ support, migrations, scaffolding, batch DML with RETURNING, and built-in functions (snowflake_id, gen_random_uuid_v7). Connects via native EVO protocol on port 9967.</Description>
     <PackageTags>efcore;entityframeworkcore;evolutiondb;database;orm;linq;sql;provider</PackageTags>
     <PackageProjectUrl>https://github.com/alptekin/evolutiondb-efcore</PackageProjectUrl>
     <RepositoryUrl>https://github.com/alptekin/evolutiondb-efcore</RepositoryUrl>
@@ -31,7 +31,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.11" />
-    <PackageReference Include="Npgsql" Version="8.0.6" />
+    <ProjectReference Include="..\evosql\evosql.csproj" />
   </ItemGroup>
 
 </Project>

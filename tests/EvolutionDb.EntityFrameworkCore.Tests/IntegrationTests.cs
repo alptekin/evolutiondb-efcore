@@ -10,20 +10,19 @@ namespace EvolutionDb.EntityFrameworkCore.Tests;
 [Collection("Integration")]
 public class IntegrationTests : IDisposable
 {
-    private const string ConnectionString = "Host=localhost;Port=5433;Username=admin;Password=admin;Database=testdb";
+    private const string ConnectionString = "Host=localhost;Port=9967;Username=admin;Password=admin;Database=testdb;Pooling=false;Timeout=10";
 
     private readonly ProductDbContext _db;
 
     public IntegrationTests()
     {
         _db = new ProductDbContext(ConnectionString);
-        try { _db.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS efcore_products"); } catch { }
-        _db.Database.ExecuteSqlRaw("CREATE TABLE efcore_products (id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(100) NOT NULL, price DECIMAL(10,2) DEFAULT 0.00)");
+        try { _db.Database.ExecuteSqlRaw("CREATE TABLE efcore_products (id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(100) NOT NULL, price DECIMAL(10,2) DEFAULT 0.00)"); } catch { }
+        try { _db.Database.ExecuteSqlRaw("DELETE FROM efcore_products"); } catch { }
     }
 
     public void Dispose()
     {
-        try { _db.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS efcore_products"); } catch { }
         _db.Dispose();
     }
 

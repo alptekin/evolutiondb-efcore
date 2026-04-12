@@ -21,17 +21,8 @@ public static class EvolutionDbDbContextOptionsBuilderExtensions
 
     private static string NormalizeConnectionString(string connectionString)
     {
-        // Default port to 5433 if not specified
         if (!connectionString.Contains("Port=", StringComparison.OrdinalIgnoreCase))
-        {
-            connectionString = connectionString.TrimEnd(';') + ";Port=5433";
-        }
-
-        // Set ServerCompatibilityMode=NoTypeLoading if not specified
-        if (!connectionString.Contains("ServerCompatibilityMode", StringComparison.OrdinalIgnoreCase))
-        {
-            connectionString = connectionString.TrimEnd(';') + ";Server Compatibility Mode=NoTypeLoading";
-        }
+            connectionString = connectionString.TrimEnd(';') + ";Port=9967";
 
         return connectionString;
     }

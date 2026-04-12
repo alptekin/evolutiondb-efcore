@@ -2,7 +2,7 @@ using System.Data;
 using System.Data.Common;
 using Microsoft.EntityFrameworkCore.Scaffolding;
 using Microsoft.EntityFrameworkCore.Scaffolding.Metadata;
-using Npgsql;
+using evosql;
 
 namespace EvolutionDb.EntityFrameworkCore.Scaffolding.Internal;
 
@@ -10,7 +10,7 @@ public class EvolutionDbDatabaseModelFactory : IDatabaseModelFactory
 {
     public DatabaseModel Create(string connectionString, DatabaseModelFactoryOptions options)
     {
-        using var connection = new NpgsqlConnection(connectionString);
+        using var connection = new EvosqlConnection(connectionString);
         connection.Open();
         return Create(connection, options);
     }

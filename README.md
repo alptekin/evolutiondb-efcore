@@ -7,6 +7,7 @@ Entity Framework Core provider for [EvolutionDB](https://github.com/alptekin/evo
 ### 1. Install
 
 ```bash
+dotnet add package evosql
 dotnet add package EvolutionDb.EntityFrameworkCore
 ```
 
@@ -15,7 +16,7 @@ dotnet add package EvolutionDb.EntityFrameworkCore
 ```bash
 docker run -d \
   --name evolutiondb \
-  -p 5433:5433 \
+  -p 9967:9967 \
   -e EVOSQL_PASSWORD=admin \
   -v evo-data:/data \
   evolutiondb/evolutiondb
@@ -33,7 +34,7 @@ public class AppDbContext : DbContext
     protected override void OnConfiguring(DbContextOptionsBuilder options)
     {
         options.UseEvolutionDb(
-            "Host=localhost;Port=5433;Username=admin;Password=admin;Database=testdb");
+            "Host=localhost;Port=9967;Username=admin;Password=admin;Database=testdb");
     }
 }
 
@@ -59,18 +60,18 @@ var products = db.Products.Where(p => p.Price > 5).ToList();
 ## Connection String
 
 ```
-Host=localhost;Port=5433;Username=admin;Password=admin;Database=testdb
+Host=localhost;Port=9967;Username=admin;Password=admin;Database=testdb
 ```
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
 | `Host` | `localhost` | Server hostname |
-| `Port` | `5433` | PostgreSQL wire protocol port (auto-set if omitted) |
+| `Port` | `9967` | Native EVO protocol port (auto-set if omitted) |
 | `Username` | — | Database user |
 | `Password` | — | User password |
 | `Database` | — | Target database name |
 
-The provider automatically sets `Port=5433` and `ServerCompatibilityMode=NoTypeLoading` if not specified.
+The provider automatically sets `Port=9967` if not specified.
 
 ## Entity Configuration
 
@@ -351,7 +352,7 @@ Supported DDL operations:
 
 ```bash
 dotnet ef dbcontext scaffold \
-  "Host=localhost;Port=5433;Username=admin;Password=admin;Database=testdb" \
+  "Host=localhost;Port=9967;Username=admin;Password=admin;Database=testdb" \
   EvolutionDb.EntityFrameworkCore
 ```
 
@@ -408,10 +409,10 @@ Your .NET App
     │     ├── Migration SQL generation
     │     └── Batch command support
     │
-    ├── Npgsql (ADO.NET driver)
-    │     └── PostgreSQL wire protocol
+    ├── evosql (native ADO.NET driver)
+    │     └── EVO text protocol
     │
-    └── EvolutionDB Server (port 5433)
+    └── EvolutionDB Server (port 9967)
 ```
 
 ## Requirements

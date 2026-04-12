@@ -15,15 +15,15 @@ public class ConnectionStringTests
         var options = new DbContextOptionsBuilder().UseEvolutionDb("Host=localhost;Database=test").Options;
         var ext = options.FindExtension<Infrastructure.EvolutionDbOptionsExtension>();
         Assert.NotNull(ext);
-        Assert.Contains("Port=5433", ext!.ConnectionString);
+        Assert.Contains("Port=9967", ext!.ConnectionString);
     }
 
     [Fact]
-    public void UseEvolutionDb_SetsNoTypeLoading()
+    public void UseEvolutionDb_DoesNotSetOldPort()
     {
         var options = new DbContextOptionsBuilder().UseEvolutionDb("Host=localhost;Database=test").Options;
         var ext = options.FindExtension<Infrastructure.EvolutionDbOptionsExtension>();
-        Assert.Contains("Server Compatibility Mode=NoTypeLoading", ext!.ConnectionString);
+        Assert.DoesNotContain("Port=5433", ext!.ConnectionString);
     }
 
     [Fact]
@@ -32,18 +32,7 @@ public class ConnectionStringTests
         var options = new DbContextOptionsBuilder().UseEvolutionDb("Host=localhost;Port=5555;Database=test").Options;
         var ext = options.FindExtension<Infrastructure.EvolutionDbOptionsExtension>();
         Assert.Contains("Port=5555", ext!.ConnectionString);
-        Assert.DoesNotContain("Port=5433", ext.ConnectionString);
-    }
-
-    [Fact]
-    public void UseEvolutionDb_PreservesExplicitCompatibilityMode()
-    {
-        var options = new DbContextOptionsBuilder().UseEvolutionDb("Host=localhost;Database=test;ServerCompatibilityMode=NoTypeLoading").Options;
-        var ext = options.FindExtension<Infrastructure.EvolutionDbOptionsExtension>();
-        Assert.NotNull(ext);
-        // Should not duplicate the setting
-        var count = ext!.ConnectionString!.Split("NoTypeLoading").Length - 1;
-        Assert.Equal(1, count);
+        Assert.DoesNotContain("Port=9967", ext.ConnectionString);
     }
 }
 

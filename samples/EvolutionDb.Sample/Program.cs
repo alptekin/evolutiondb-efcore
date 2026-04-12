@@ -48,7 +48,7 @@ public class AppDbContext : DbContext
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder.UseEvolutionDb(
-            "Host=localhost;Port=5433;Username=admin;Password=admin;Database=testdb");
+            "Host=localhost;Port=9967;Username=admin;Password=admin;Database=testdb");
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <!-- NuGet package metadata -->
+    <PackageId>evosql</PackageId>
+    <Version>8.0.0</Version>
+    <Authors>alptekin</Authors>
+    <Company>EvolutionDB</Company>
+    <Description>Native ADO.NET data provider for EvolutionDB. Connects via EVO text protocol on port 9967. Provides EvosqlConnection, EvosqlCommand, EvosqlDataReader for direct database access.</Description>
+    <PackageTags>ado.net;database;evolutiondb;evosql;data-provider;sql</PackageTags>
+    <PackageProjectUrl>https://github.com/alptekin/evolutiondb-efcore</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/alptekin/evolutiondb-efcore</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
+    <None Include="../../icon.png" Pack="true" PackagePath="/" />
+  </ItemGroup>
+
+</Project>
