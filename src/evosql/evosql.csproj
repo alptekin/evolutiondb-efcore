@@ -7,7 +7,7 @@
 
     <!-- NuGet package metadata -->
     <PackageId>evosql</PackageId>
-    <Version>8.0.0</Version>
+    <Version>8.0.1</Version>
     <Authors>alptekin</Authors>
     <Company>EvolutionDB</Company>
     <Description>Native ADO.NET data provider for EvolutionDB. Connects via EVO text protocol on port 9967. Provides EvosqlConnection, EvosqlCommand, EvosqlDataReader for direct database access.</Description>
