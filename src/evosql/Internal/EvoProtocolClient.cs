@@ -15,6 +15,15 @@ public class EvoQueryResult
     public int RecordsAffected { get; set; } = -1;
 }
 
+public class EvoBatchResult
+{
+    public long TotalAffected { get; set; }
+    public bool HasError { get; set; }
+    public int ErrorRow { get; set; } = -1;
+    public string ErrorSqlState { get; set; } = "";
+    public string ErrorMessage { get; set; } = "";
+}
+
 public class EvoProtocolClient : IDisposable
 {
     private TcpClient? _tcp;
@@ -24,6 +33,8 @@ public class EvoProtocolClient : IDisposable
 
     public bool IsConnected => _tcp?.Connected == true;
 
+    private NetworkStream? _stream;
+
     public void Connect(string host, int port, int timeoutMs = 30000)
     {
         _tcp = new TcpClient();
@@ -31,9 +42,9 @@ public class EvoProtocolClient : IDisposable
         _tcp.ReceiveTimeout = timeoutMs;
         _tcp.Connect(host, port);
 
-        var stream = _tcp.GetStream();
-        _reader = new StreamReader(stream, Encoding.UTF8);
-        _writer = new StreamWriter(stream, new UTF8Encoding(false)) { AutoFlush = true };
+        _stream = _tcp.GetStream();
+        _reader = new StreamReader(_stream, Encoding.UTF8);
+        _writer = new StreamWriter(_stream, new UTF8Encoding(false)) { AutoFlush = true };
     }
 
     public void Authenticate(string username, string password)
@@ -192,6 +203,62 @@ public class EvoProtocolClient : IDisposable
             {
                 result.HasError = true;
                 var parts = line[4..].Split(' ', 2);
+                result.ErrorSqlState = parts[0];
+                result.ErrorMessage = parts.Length > 1 ? parts[1] : "Unknown error";
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Execute a prepared statement with N parameter sets in a single roundtrip.
+    /// Server protocol: EXECUTE_BATCH name rowCount paramCount\n then rowCount * paramCount lines.
+    /// Response: BATCH_OK totalAffected\n READY\n  or  BATCH_ERR rowIndex sqlstate msg\n READY\n
+    /// </summary>
+    public EvoBatchResult ExecuteBatch(string name, int rowCount, int paramCount, string?[] flattenedParams)
+    {
+        if (flattenedParams.Length != rowCount * paramCount)
+            throw new ArgumentException($"Expected {rowCount * paramCount} params, got {flattenedParams.Length}");
+
+        // Build the entire request in a single buffer to avoid per-line TCP writes.
+        var sb = new StringBuilder(rowCount * paramCount * 16);
+        sb.Append("EXECUTE_BATCH ").Append(name).Append(' ').Append(rowCount).Append(' ').Append(paramCount).Append('\n');
+        foreach (var p in flattenedParams)
+        {
+            if (p is null) sb.Append("\\N");
+            else sb.Append(p);
+            sb.Append('\n');
+        }
+        // Write directly to NetworkStream, bypassing StreamWriter buffering quirks
+        var bytes = Encoding.UTF8.GetBytes(sb.ToString());
+        _stream!.Write(bytes, 0, bytes.Length);
+        _stream.Flush();
+
+        var result = new EvoBatchResult();
+        while (true)
+        {
+            var line = ReadLine();
+            if (line == null) throw new EvosqlException("Connection closed unexpectedly", "08006");
+
+            if (line == "READY") break;
+
+            if (line.StartsWith("BATCH_OK "))
+            {
+                result.TotalAffected = long.Parse(line[9..]);
+            }
+            else if (line.StartsWith("BATCH_ERR "))
+            {
+                var parts = line[10..].Split(' ', 3);
+                result.HasError = true;
+                result.ErrorRow = int.Parse(parts[0]);
+                result.ErrorSqlState = parts.Length > 1 ? parts[1] : "?????";
+                result.ErrorMessage = parts.Length > 2 ? parts[2] : "";
+            }
+            else if (line.StartsWith("ERR "))
+            {
+                var parts = line[4..].Split(' ', 2);
+                result.HasError = true;
                 result.ErrorSqlState = parts[0];
                 result.ErrorMessage = parts.Length > 1 ? parts[1] : "Unknown error";
             }

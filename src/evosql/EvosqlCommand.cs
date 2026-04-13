@@ -18,6 +18,12 @@ public class EvosqlCommand : DbCommand
     private string? _preparedName;
     private Dictionary<string, int>? _parameterMapping;
 
+    /// <summary>True if Prepare() has been called successfully.</summary>
+    public bool IsPrepared => _isPrepared;
+
+    /// <summary>Server-side prepared statement name (only valid after Prepare()).</summary>
+    public string? PreparedName => _preparedName;
+
     public EvosqlCommand() { }
 
     public EvosqlCommand(string commandText)
